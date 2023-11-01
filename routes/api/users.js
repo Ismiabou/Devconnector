@@ -9,7 +9,7 @@ const passport = require('passport');
 const User = require('../../models/Users');
 
 // Load validation
-const validatorRegisterInput = require('../../validation/register');
+const validateRegisterInput = require('../../validation/register');
 
 // @route GET api/users/test
 //@desc Test users routes
@@ -20,11 +20,11 @@ router.get('/test', (req, res) => res.json({ msg: 'test' }));
 // @Desc register users routes
 // @acces Public
 router.post('/register', (req, res) => {
-    const {errors, isValid} = validatorRegisterInput(req.body);
-
-    if (isValid) {
+    const {errors, isValid} = validateRegisterInput(req.body);
+    // Check if the user validates the required fields 
+        if (isValid) {
         return res.status(400).json(errors);
-    }
+     }
 
     User.findOne({ email: req.body.email })
         .then(user => {
@@ -95,7 +95,7 @@ router.post('/login', (req, res) => {
 // @route api/users/current
 // @desc  return current user
 // @access public
-router.get('/current', passport.authenticate('jwt',{session: false}), 
+router.get('/current', passport.authenticate('jwt', {session: false}), 
     (req, res) => {
     res.json({
         id:req.user.id,
