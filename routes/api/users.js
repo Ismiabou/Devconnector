@@ -20,11 +20,11 @@ router.get('/test', (req, res) => res.json({ msg: 'test' }));
 // @Desc register users routes
 // @acces Public
 router.post('/register', (req, res) => {
-    const {errors, isValid} = validateRegisterInput(req.body);
+    const { errors, isValid } = validateRegisterInput(req.body);
     // Check if the user validates the required fields 
-        if (isValid) {
+    if (!isValid) {
         return res.status(400).json(errors);
-     }
+    }
 
     User.findOne({ email: req.body.email })
         .then(user => {
@@ -43,13 +43,13 @@ router.post('/register', (req, res) => {
                     password: req.body.password
                 });
 
-                bcrypt.genSalt(10, (err, salt) => {
+                bcrypt.genSalt(10, (errors, salt) => {
                     bcrypt.hash(newUser.password, salt, (err, hash) => {
-                        if (err) {return err;}
+                        if (errors) { return err; }
                         newUser.password = hash;
                         newUser.save()
                             .then(user => res.json(user))
-                            .catch(err => console.log(err));
+                            .catch(errors => res.json(errors));
                     })
                 })
             }
@@ -73,15 +73,15 @@ router.post('/login', (req, res) => {
         bcrypt.compare(password, user.password).then(isMatch => {
             if (isMatch) {
                 // User matched
-                const payload = {id: user.id, name: user.name, email: user.email};
+                const payload = { id: user.id, name: user.name, email: user.email };
                 // Sign In
                 jwt.sign(
-                    payload, 
-                    keys.secretOrkey, 
-                    {expiresIn: 3600},
+                    payload,
+                    keys.secretOrkey,
+                    { expiresIn: 3600 },
                     (err, token) => {
                         res.json({
-                            success:true,
+                            success: true,
                             token: 'Bearer ' + token
                         });
                     });
@@ -95,13 +95,13 @@ router.post('/login', (req, res) => {
 // @route api/users/current
 // @desc  return current user
 // @access public
-router.get('/current', passport.authenticate('jwt', {session: false}), 
+router.get('/current', passport.authenticate('jwt', { session: false }),
     (req, res) => {
-    res.json({
-        id:req.user.id,
-        name:req.user.name,
-        email:req.user.email
-    });
+        res.json({
+            id: req.user.id,
+            name: req.user.name,
+            email: req.user.email
+        });
     });
 
 module.exports = router;
