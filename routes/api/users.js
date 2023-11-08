@@ -64,7 +64,7 @@ router.post('/register', (req, res) => {
 router.post('/login', (req, res) => {
     const { errors, isValid } = validateLoginInput(req.body);
     // Check if the user validates the required fields 
-        if (!isValid) {
+        if (isValid) {
         return res.status(404).json(errors);
         }
     const email = req.body.email;

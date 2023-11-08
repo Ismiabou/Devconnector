@@ -7,7 +7,7 @@ const ValidateProfileInput = require('../../validation/profile');
 
 // Load Profile Model
 const Profile = require('../../models/Profile');
-const User = require('../../models/Users');
+const user = require('../../models/Users');
 
 //@route GET api/profile/test
 //@desc  Test profile routes
@@ -30,15 +30,50 @@ router.get('/', passport.authenticate('jwt', { session: false }), (req, res) => 
         })
         .catch(err => res.status(404).json(err));
 });
+
+//@route GET api/profile/handle/:handle
+//@desc  GET profile by handle
+//@acces Public
+
+router.get('/handle/:handle', (req, res) => {
+    const errors = {};
+    Profile.findOne({handle: req.params.handle})
+        .populate('user', ['name', 'avatar'])
+        .then(profile => {
+            if(!profile){
+                errors.noprofile = "There is no profile for this user";
+                res.status(404).json(errors);
+            }
+            console.log(profile);
+            res.json(profile);
+        })
+        .catch(err => res.status(404).json(err));
+});
+
+//@route GET api/profile/user/:user_id
+//@desc  GET profile by user_id
+//@acces Public
+
+router.get('/user/:user_id', (req, res) => {
+    const errors ={};
+    Profile.findOne({user: req.params.user_id})
+        .populate('user', ['name', 'avatar'])
+        .then(profile => {
+            if(!profile){
+                errors.noprofile = "There is no profile for this user";
+                res.status(404).json(errors);
+            }
+            res.json(profile)
+        }).catch(err => res.status(404).json(err));
+});
+
 //@route POST api/profile
 //@desc  create current user profile 
 //@acces Private
 router.post('/', passport.authenticate('jwt', { session: false }), (req, res) => {
     const {errors, isValid } = ValidateProfileInput(req.body);
 
-    if(!isValid){
-        return res.status(400).json(errors);
-    }
+    if (isValid){
    // Get fiels
 
    const profileFields = {};
@@ -71,7 +106,7 @@ router.post('/', passport.authenticate('jwt', { session: false }), (req, res) =>
                 {user: req.user.id},
                 {$set: profileFields},
                 {new: true}
-                ).then(profile =>res.json(profile.toString()));
+                ).then(profile =>res.json(profile));
         } else {
             // Create
 
@@ -83,9 +118,9 @@ router.post('/', passport.authenticate('jwt', { session: false }), (req, res) =>
                         errors.handle = 'That handle already exist';
                         res.status(400).json(errors);
                     }
-                    new Profile(profileFields).save().then(profile => console.log(profile.toString()));
+                    new Profile(profileFields).save().then(profile => res.json(profile));
                 });
         }
     })
-});
+}});
 module.exports = router;
